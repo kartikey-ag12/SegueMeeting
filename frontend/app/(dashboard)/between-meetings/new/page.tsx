@@ -49,8 +49,11 @@ export default function NewFlyingMinutePage() {
 
     try {
       setIsSubmitting(true);
-      await fetchWithAuth(`/organisations/${orgId}/decisions/flying`, {
+      const res = await fetchWithAuth(`/organisations/${orgId}/decisions/flying`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           title,
           content,
@@ -58,6 +61,12 @@ export default function NewFlyingMinutePage() {
           voterIds: selectedVoters
         })
       });
+      if (!res.ok) {
+        const errorText = await res.text();
+        toast.error(`Failed to create: ${errorText}`);
+        return;
+      }
+
       toast.success("Flying Minute created successfully");
       router.push("/between-meetings");
     } catch (error) {

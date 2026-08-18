@@ -40,10 +40,19 @@ export default function FlyingMinuteDetailsPage() {
   const handleVote = async (vote: 'IN_FAVOUR' | 'AGAINST' | 'ABSTAIN') => {
     try {
       setIsVoting(true);
-      await fetchWithAuth(`/organisations/${orgId}/decisions/${id}/vote`, {
+      const res = await fetchWithAuth(`/organisations/${orgId}/decisions/${id}/vote`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ vote, comment })
       });
+      if (!res.ok) {
+        const errorText = await res.text();
+        toast.error(`Failed to submit vote: ${errorText}`);
+        return;
+      }
+
       toast.success("Vote submitted successfully");
       mutate();
     } catch (err) {
