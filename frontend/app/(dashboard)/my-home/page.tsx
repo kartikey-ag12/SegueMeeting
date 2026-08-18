@@ -25,14 +25,14 @@ export default async function MyHomePage() {
       if (user.memberships && user.memberships.length > 0) {
         const org = user.memberships[0].organisation;
         orgName = org.name;
-        const res = await fetchWithAuth(`/meetings?organisationId=${org.id}`);
+        const res = await fetchWithAuth(`/meetings?organisationId=${org.id}`, { cache: 'no-store' });
         if (res.ok) {
           meetings = await res.json();
         }
       }
     }
     
-    const actionsRes = await fetchWithAuth("/actions/me");
+    const actionsRes = await fetchWithAuth("/actions/me", { cache: 'no-store' });
     if (actionsRes.ok) {
       myActions = await actionsRes.json();
     }
