@@ -1,7 +1,9 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { fetchWithAuth } from "@/lib/api";
-import { Calendar, Clock, MapPin, MoreHorizontal, PenTool, CheckSquare } from "lucide-react";
+import { Calendar, Clock, MapPin, MoreHorizontal, PenTool, CheckSquare, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 function formatMeetingDate(dateString: string) {
   const d = new Date(dateString);
@@ -49,13 +51,21 @@ export default async function MyHomePage() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-12">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold flex items-baseline gap-2 text-slate-800">
-          My BoardPro Dashboard 
-          <span className="text-sm font-normal text-muted-foreground ml-2">
-            All meetings and key activities across all boards and committees
-          </span>
-        </h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold flex items-baseline gap-2 text-slate-800">
+            My BoardPro Dashboard 
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              All meetings and key activities across all boards and committees
+            </span>
+          </h1>
+        </div>
+        <Link href="/meetings/new">
+          <Button className="bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Add Meeting
+          </Button>
+        </Link>
       </div>
 
       {/* Top Section - Meetings */}
