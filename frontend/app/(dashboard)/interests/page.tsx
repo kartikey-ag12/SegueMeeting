@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { mockInterests } from "@/lib/mock-interests";
 import { ExternalLink, ShieldCheck, History } from "lucide-react";
 import {
   Select,

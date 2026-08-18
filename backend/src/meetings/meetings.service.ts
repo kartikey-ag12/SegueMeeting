@@ -54,10 +54,14 @@ export class MeetingsService {
           startTime: dto.startTime,
           endTime: dto.endTime,
           location: dto.location,
+          locationId: dto.locationId,
+          videoUrl: dto.videoUrl,
           isRemote: dto.isRemote ?? false,
           administrator: dto.administrator,
           notes: dto.notes,
           status: dto.status,
+          attendees: dto.attendees || [],
+          apologies: dto.apologies || [],
         },
       });
       return meeting;
@@ -119,6 +123,16 @@ export class MeetingsService {
   async getMeetingById(id: string, user: AuthenticatedUser) {
     const meeting = await this.prisma.meeting.findUnique({
       where: { id },
+      include: {
+        agendaSections: {
+          include: {
+            items: {
+              orderBy: { position: 'asc' },
+            },
+          },
+          orderBy: { position: 'asc' },
+        },
+      },
     });
 
     if (!meeting) {
@@ -172,11 +186,14 @@ export class MeetingsService {
           startTime: dto.startTime,
           endTime: dto.endTime,
           location: dto.location,
+          videoUrl: dto.videoUrl,
           isRemote: dto.isRemote,
           administrator: dto.administrator,
           notes: dto.notes,
           status: dto.status,
           agendaStatus: dto.agendaStatus,
+          attendees: dto.attendees,
+          apologies: dto.apologies,
         },
       });
       return updated;

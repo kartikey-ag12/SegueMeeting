@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { DocumentsController } from './documents.controller';
 import { DocumentsService } from './documents.service';
 import { OrganisationsModule } from '../organisations/organisations.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 /**
  * DocumentsModule — handles document metadata CRUD.
@@ -15,7 +16,7 @@ import { OrganisationsModule } from '../organisations/organisations.module';
  *  - OrganisationsModule for requireMembership() tenant isolation
  */
 @Module({
-  imports: [OrganisationsModule],
+  imports: [OrganisationsModule, CloudinaryModule],
   controllers: [DocumentsController],
   providers: [DocumentsService],
 })

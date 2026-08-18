@@ -10,6 +10,7 @@ import { PrismaService } from '../common/database/prisma.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { CreateLocationDto } from './dto/create-location.dto';
 
 /** Roles that have administrative permissions within an organisation. */
 const ADMIN_ROLES: OrganisationRole[] = [OrganisationRole.BOARD_ADMIN];
@@ -19,8 +20,36 @@ export class OrganisationsService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ─────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   // ORGANISATION CRUD
   // ─────────────────────────────────────────────
+
+  /**
+   * POST /organisations
+   * 
+   * Creates a new organisation and assigns the creator as BOARD_ADMIN.
+   */
+  async create(dto: any, requestingUser: AuthenticatedUser) {
+    // We expect the dto to have { name: string, settings?: any }
+    return this.prisma.$transaction(async (tx) => {
+      const org = await tx.organisation.create({
+        data: {
+          name: dto.name.trim(),
+          settings: dto.settings || {},
+        },
+      });
+
+      await tx.organisationMember.create({
+        data: {
+          organisationId: org.id,
+          userId: requestingUser.id,
+          role: OrganisationRole.BOARD_ADMIN,
+        },
+      });
+
+      return org;
+    });
+  }
 
   /**
    * GET /organisations/:id
@@ -265,6 +294,54 @@ export class OrganisationsService {
     return { message: 'Member removed from the organisation successfully' };
   }
 
+  /**
+   * PATCH /organisations/:id/members/:userId
+   * Updates a user's role in the organisation.
+   */
+  async updateMemberRole(
+    organisationId: string,
+    targetUserId: string,
+    newRole: OrganisationRole,
+    requestingUser: AuthenticatedUser,
+  ) {
+    await this.requireAdminRole(organisationId, requestingUser.id);
+
+    const membership = await this.prisma.organisationMember.findUnique({
+      where: {
+        organisationId_userId: {
+          organisationId,
+          userId: targetUserId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException('This user is not a member of the organisation');
+    }
+
+    // Protect the last BOARD_ADMIN if they are trying to demote themselves or someone else is demoting them
+    if (membership.role === OrganisationRole.BOARD_ADMIN && newRole !== OrganisationRole.BOARD_ADMIN) {
+      const adminCount = await this.prisma.organisationMember.count({
+        where: { organisationId, role: OrganisationRole.BOARD_ADMIN },
+      });
+      if (adminCount <= 1) {
+        throw new BadRequestException('Cannot demote the last Board Admin.');
+      }
+    }
+
+    return this.prisma.organisationMember.update({
+      where: { id: membership.id },
+      data: { role: newRole },
+      select: {
+        id: true,
+        role: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+  }
+
   // ─────────────────────────────────────────────
   // TENANT ISOLATION HELPERS
   // ─────────────────────────────────────────────
@@ -316,5 +393,31 @@ export class OrganisationsService {
     }
 
     return membership;
+  }
+
+  async getLocations(organisationId: string) {
+    return this.prisma.location.findMany({
+      where: { organisationId },
+      orderBy: { isDefault: 'desc' },
+    });
+  }
+
+  async createLocation(organisationId: string, dto: CreateLocationDto) {
+    if (dto.isDefault) {
+      await this.prisma.location.updateMany({
+        where: { organisationId },
+        data: { isDefault: false },
+      });
+    }
+
+    return this.prisma.location.create({
+      data: {
+        organisationId,
+        name: dto.name,
+        address: dto.address,
+        timeZone: dto.timeZone,
+        isDefault: dto.isDefault ?? false,
+      },
+    });
   }
 }

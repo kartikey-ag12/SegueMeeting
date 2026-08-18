@@ -10,49 +10,29 @@ import { AgendaModule } from './agenda/agenda.module';
 import { MinutesModule } from './minutes/minutes.module';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { DecisionsModule } from './decisions/decisions.module';
+import { BoardPackModule } from './board-pack/board-pack.module';
+import { ActionsModule } from './actions/actions.module';
 
 @Module({
   imports: [
-    /**
-     * ConfigModule reads .env (or process.env) and makes every value
-     * available via ConfigService throughout the application.
-     * isGlobal: true means no other module needs to import ConfigModule.
-     */
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-
-    /**
-     * DatabaseModule is @Global and provides PrismaService to all modules
-     * without requiring explicit imports.
-     */
     DatabaseModule,
-
-    /** Authentication — register, login, JWT strategy */
     AuthModule,
-
-    /** Organisations — CRUD, member management, tenant isolation */
     OrganisationsModule,
-
-    /** Meetings — CRUD, tenant-isolated meeting management */
     MeetingsModule,
-
-    /** Agenda — Sections and Items management */
     AgendaModule,
-
-    /** Minutes — Meeting minutes and action items */
     MinutesModule,
-
-    /** Documents — Document metadata management */
     DocumentsModule,
-
-    /** Notifications — User notification read/manage API */
     NotificationsModule,
+    DecisionsModule,
+    BoardPackModule,
+    ActionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
-

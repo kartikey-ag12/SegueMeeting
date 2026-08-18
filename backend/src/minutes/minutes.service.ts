@@ -139,7 +139,7 @@ export class MinutesService {
     }
 
     try {
-      return await this.prisma.minutes.create({
+      const newMinutes = await this.prisma.minutes.create({
         data: {
           meetingId,
           status: dto.status,
@@ -147,6 +147,40 @@ export class MinutesService {
         },
         include: { actionItems: true },
       });
+
+      // Sync decisions
+      if (dto.content) {
+        try {
+          const blocks = JSON.parse(dto.content);
+          const decisionBlocks = blocks.filter((b: any) => b.blockType === 'decision');
+          
+          if (decisionBlocks.length > 0) {
+             await this.prisma.decision.createMany({
+               data: decisionBlocks.map((b: any) => ({
+                 organisationId: meeting.organisationId,
+                 meetingId: meeting.id,
+                 content: b.content || "No description",
+                 type: 'MEETING',
+                 outcome: b.decisionOutcome === 'approved' ? 'APPROVED' : b.decisionOutcome === 'rejected' ? 'NOT_APPROVED' : 'NOT_SET',
+                 mover: b.mover || null,
+                 seconder: b.seconder || null,
+                 date: "2026-08-18" // Fallback, will fix
+               }))
+             });
+             // Fix date by fetching meeting
+             const fullMeeting = await this.prisma.meeting.findUnique({ where: { id: meeting.id } });
+             if (fullMeeting) {
+               await this.prisma.decision.updateMany({
+                 where: { meetingId: meeting.id },
+                 data: { date: fullMeeting.date }
+               });
+             }
+          }
+        } catch (e) {
+          this.logger.error("Failed to sync decisions", e);
+        }
+      }
+      return newMinutes;
     } catch (error) {
       // meetingId is @unique in the Minutes model → P2002 means a duplicate
       if (
@@ -234,7 +268,7 @@ export class MinutesService {
     }
 
     try {
-      return await this.prisma.minutes.update({
+      const updatedMinutes = await this.prisma.minutes.update({
         where: { id: minutesId },
         data: {
           status: dto.status,
@@ -242,6 +276,40 @@ export class MinutesService {
         },
         include: { actionItems: true },
       });
+
+      // Sync decisions
+      if (dto.content) {
+        try {
+          const blocks = JSON.parse(dto.content);
+          const decisionBlocks = blocks.filter((b: any) => b.blockType === 'decision');
+          
+          await this.prisma.decision.deleteMany({
+            where: { meetingId: minutes.meetingId }
+          });
+          
+          if (decisionBlocks.length > 0) {
+             const meeting = await this.prisma.meeting.findUnique({ where: { id: minutes.meetingId } });
+             if (meeting) {
+               await this.prisma.decision.createMany({
+                 data: decisionBlocks.map((b: any) => ({
+                   organisationId: meeting.organisationId,
+                   meetingId: meeting.id,
+                   content: b.content || "No description",
+                   type: 'MEETING',
+                   outcome: b.decisionOutcome === 'approved' ? 'APPROVED' : b.decisionOutcome === 'rejected' ? 'NOT_APPROVED' : 'NOT_SET',
+                   mover: b.mover || null,
+                   seconder: b.seconder || null,
+                   date: meeting.date
+                 }))
+               });
+             }
+          }
+        } catch (e) {
+          this.logger.error("Failed to sync decisions", e);
+        }
+      }
+
+      return updatedMinutes;
     } catch (error) {
       this.logger.error(
         `Failed to update minutes ${minutesId}`,

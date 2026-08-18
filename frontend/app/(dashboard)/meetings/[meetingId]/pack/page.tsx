@@ -1,9 +1,8 @@
-"use client";
-
-import { useParams, useRouter } from "next/navigation";
+import { fetchWithAuth } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { mockMeetings } from "@/lib/mock-meetings";
-import { mockAgendas } from "@/lib/mock-agenda";
+import Link from "next/link";
+
+import DownloadPackButton from "./DownloadPackButton";
 
 const purposeLabels: Record<string, string> = {
   none: "—",
@@ -12,39 +11,51 @@ const purposeLabels: Record<string, string> = {
   for_discussion: "For discussion",
 };
 
-export default function BoardPackPage() {
-  const params = useParams<{ meetingId: string }>();
-  const router = useRouter();
+export default async function BoardPackPage(props: { params: Promise<{ meetingId: string }> }) {
+  const { meetingId } = await props.params;
 
-  const meeting = mockMeetings.find((m) => m.id === params.meetingId);
-  const sections = mockAgendas[params.meetingId] ?? [];
-
-  if (!meeting) {
-    return <p className="text-muted-foreground">Meeting not found.</p>;
+  let meeting = null;
+  try {
+    const res = await fetchWithAuth(`/meetings/${meetingId}/agenda`, { cache: 'no-store' });
+    if (res.ok) {
+      meeting = await res.json();
+    } else if (res.status === 404) {
+      const fallbackRes = await fetchWithAuth(`/meetings/${meetingId}`, { cache: 'no-store' });
+      if (fallbackRes.ok) meeting = await fallbackRes.json();
+    }
+  } catch (err: any) {
+    if (err?.digest && err.digest.startsWith('NEXT_REDIRECT')) throw err;
+    console.error("Failed to fetch meeting", err);
   }
 
-  if (meeting.agendaStatus !== "published") {
+  const sections = meeting?.agendaSections || [];
+
+  if (!meeting) {
+    return <p className="text-muted-foreground p-8">Meeting not found.</p>;
+  }
+
+  if (meeting.agendaStatus !== "PUBLISHED") {
     return (
       <div className="mx-auto max-w-2xl">
         <h1 className="text-2xl font-semibold tracking-tight">Board Pack</h1>
         <p className="mt-4 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
-          This meeting&apos;s agenda hasn&apos;t been published yet.. The Board Pack
+          This meeting's agenda hasn't been published yet. The Board Pack
           compiles automatically once the agenda is published — go to the
           Agenda tab and publish it first.
         </p>
-        <button
-          onClick={() => router.push(`/meetings/${meeting.id}/agenda`)}
-          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+        <Link
+          href={`/meetings/${meeting.id}/agenda`}
+          className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
           Go to agenda
-        </button>
+        </Link>
       </div>
     );
   }
 
-  const totalItems = sections.reduce((sum, s) => sum + s.items.length, 0);
+  const totalItems = sections.reduce((sum: number, s: any) => sum + s.items.length, 0);
   const totalMinutes = sections.reduce(
-    (sum, s) => sum + s.items.reduce((a, i) => a + i.durationMinutes, 0),
+    (sum: number, s: any) => sum + s.items.reduce((a: number, i: any) => a + i.durationMinutes, 0),
     0
   );
 
@@ -59,13 +70,7 @@ export default function BoardPackPage() {
             Auto-compiled from the published agenda
           </p>
         </div>
-        <button
-          disabled
-          title="PDF export needs the backend — coming once apps/api is wired up"
-          className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground opacity-50"
-        >
-          Download PDF
-        </button>
+        <DownloadPackButton meetingId={meetingId} />
       </div>
 
       {/* Cover page */}

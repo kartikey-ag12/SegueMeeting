@@ -15,6 +15,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { OrganisationsService } from './organisations.service';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
+import { CreateOrganisationDto } from './dto/create-organisation.dto';
+import { CreateLocationDto } from './dto/create-location.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 
 /**
@@ -29,6 +31,15 @@ export class OrganisationsController {
   // ─────────────────────────────────────────────
   // ORGANISATION
   // ─────────────────────────────────────────────
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(
+    @Body() dto: CreateOrganisationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.organisationsService.create(dto, user);
+  }
 
   /**
    * GET /organisations/:id
@@ -98,12 +109,39 @@ export class OrganisationsController {
    * Only the membership record is deleted — the user account is preserved.
    */
   @Delete(':id/members/:userId')
-  @HttpCode(HttpStatus.OK)
-  removeMember(
+  async removeMember(
     @Param('id') id: string,
     @Param('userId') userId: string,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AuthenticatedUser
   ) {
     return this.organisationsService.removeMember(id, userId, user);
+  }
+
+  /**
+   * PATCH /organisations/:id/members/:userId
+   *
+   * Updates a member's role. Caller must be a BOARD_ADMIN.
+   */
+  @Patch(':id/members/:userId')
+  async updateMemberRole(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() dto: { role: any }, // using any to bypass import issues for now, or just UpdateMemberRoleDto if imported
+    @CurrentUser() user: AuthenticatedUser
+  ) {
+    return this.organisationsService.updateMemberRole(id, userId, dto.role, user);
+  }
+
+  @Get(':id/locations')
+  async getLocations(@Param('id') id: string) {
+    return this.organisationsService.getLocations(id);
+  }
+
+  @Post(':id/locations')
+  async createLocation(
+    @Param('id') id: string,
+    @Body() createLocationDto: CreateLocationDto
+  ) {
+    return this.organisationsService.createLocation(id, createLocationDto);
   }
 }

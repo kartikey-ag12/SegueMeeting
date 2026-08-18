@@ -10,7 +10,11 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -19,6 +23,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+
 /**
  * DocumentsController — all endpoints are JWT-protected.
  * Business logic and tenant isolation live entirely in DocumentsService.
@@ -26,7 +32,10 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 @UseGuards(JwtAuthGuard)
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly cloudinaryService: CloudinaryService
+  ) {}
 
   /**
    * POST /documents
@@ -40,6 +49,29 @@ export class DocumentsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.documentsService.createDocument(dto, user);
+  }
+
+  /**
+   * POST /documents/upload
+   * Uploads a file to Cloudinary and returns the file metadata.
+   */
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    
+    // Upload to Cloudinary
+    const result = await this.cloudinaryService.uploadFile(file.buffer, 'documents');
+    
+    return {
+      storagePath: result.secure_url,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+    };
   }
 
   /**

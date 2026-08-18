@@ -1,5 +1,5 @@
-export type AgendaStatus = "draft" | "published";
-export type MinutesStatus = "not_started" | "draft" | "in_review" | "confirmed";
+export type AgendaStatus = "DRAFT" | "PUBLISHED";
+export type MinutesStatus = "NOT_STARTED" | "DRAFT" | "IN_REVIEW" | "CONFIRMED";
 
 export interface Meeting {
   id: string;
@@ -11,12 +11,28 @@ export interface Meeting {
   agendaStatus: AgendaStatus;
   minutesStatus: MinutesStatus;
 }
+export interface Document {
+  id: string;
+  fileName: string;
+  originalName: string;
+  sizeBytes: number;
+}
+
+export interface ActionFilterSettings {
+  overdue: boolean;
+  completedSince: string | null;
+  dueBefore: string | null;
+}
+
 export interface AgendaItem {
   id: string;
   title: string;
-  purpose: "none" | "for_noting" | "for_decision" | "for_discussion";
+  purpose: "NONE" | "FOR_NOTING" | "FOR_DECISION" | "FOR_DISCUSSION";
   presenter: string;
   durationMinutes: number;
+  description?: string;
+  documents?: Document[];
+  actionFilterSettings?: ActionFilterSettings;
 }
 
 export interface AgendaSection {

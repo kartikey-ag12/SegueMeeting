@@ -1,26 +1,22 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { mockMinutes } from "@/lib/mock-minutes";
-import { mockMeetings } from "@/lib/mock-meetings";
-import { MinuteBlock } from "@/lib/types";
 import { CheckSquare, User, Calendar, MoreHorizontal } from "lucide-react";
 
-export default function ActionsPage() {
-  // Flatten all action blocks across all meetings
-  const allActions = Object.entries(mockMinutes).flatMap(([meetingId, blocks]) => {
-    return blocks
-      .filter((b): b is MinuteBlock & { blockType: "action" } => b.blockType === "action")
-      .map(action => {
-        const meeting = mockMeetings.find(m => m.id === meetingId);
-        return {
-          ...action,
-          meetingTitle: meeting?.title || "Unknown Meeting"
-        };
-      });
-  });
+import { fetchWithAuth } from "@/lib/api";
 
-  const currentActions = allActions.filter(a => a.actionStatus === "open" || a.actionStatus === "in_progress" || !a.actionStatus);
-  const completedActions = allActions.filter(a => a.actionStatus === "completed");
-  const cancelledActions = allActions.filter(a => a.actionStatus === "cancelled");
+export default async function ActionsPage() {
+  let allActions: any[] = [];
+  try {
+    const res = await fetchWithAuth("/actions/me", { cache: "no-store" });
+    if (res.ok) {
+      allActions = await res.json();
+    }
+  } catch (err) {
+    console.error("Failed to fetch actions:", err);
+  }
+
+  const currentActions = allActions.filter(a => a.status === "OPEN" || !a.status);
+  const completedActions = allActions.filter(a => a.status === "COMPLETED");
+  const cancelledActions = allActions.filter(a => a.status === "CANCELLED");
 
   // Helper to render action lists
   const renderActionsList = (actions: typeof allActions, emptyMessage: string) => {
@@ -40,23 +36,23 @@ export default function ActionsPage() {
         {actions.map(action => (
           <div key={action.id} className="flex items-center justify-between border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow group">
             <div className="flex-1 min-w-0 pr-4">
-              <h3 className="font-medium text-slate-800 text-base mb-1">{action.content}</h3>
+              <h3 className="font-medium text-slate-800 text-base mb-1">{action.description}</h3>
               <div className="flex items-center text-sm text-slate-500 gap-4">
-                <span className="flex items-center gap-1.5"><User className="w-4 h-4" /> {action.actionOwner || "Unassigned"}</span>
-                <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Due: {action.actionDueDate || "No date"}</span>
+                <span className="flex items-center gap-1.5"><User className="w-4 h-4" /> {action.assignee?.name || "Unassigned"}</span>
+                <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Due: {action.dueDate ? new Date(action.dueDate).toLocaleDateString() : "No date"}</span>
                 <span className="text-gray-300">•</span>
-                <span>{action.meetingTitle}</span>
+                <span>{action.minutes?.meeting?.title || "Meeting"}</span>
               </div>
             </div>
             
             <div className="flex items-center gap-3 shrink-0">
                {/* Status Badge (visual only) */}
                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                  action.actionStatus === "completed" ? "bg-green-100 text-green-700" :
-                  action.actionStatus === "open" ? "bg-blue-100 text-blue-700" :
+                  action.status === "COMPLETED" ? "bg-green-100 text-green-700" :
+                  action.status === "OPEN" ? "bg-blue-100 text-blue-700" :
                   "bg-gray-100 text-gray-700"
                }`}>
-                 {action.actionStatus === "completed" ? "Completed" : action.actionStatus === "open" ? "Open" : "Action"}
+                 {action.status === "COMPLETED" ? "Completed" : action.status === "OPEN" ? "Open" : "Action"}
                </span>
                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
                  <MoreHorizontal className="w-5 h-5" />

@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { mockMeetings } from "@/lib/mock-meetings";
+import { fetchWithAuth } from "@/lib/api";
 import { Calendar, Clock, MapPin, MoreHorizontal, PenTool, CheckSquare } from "lucide-react";
 
 function formatMeetingDate(dateString: string) {
@@ -11,10 +11,40 @@ function formatMeetingDate(dateString: string) {
   return { month, day, year };
 }
 
-export default function MyHomePage() {
-  // Simple filter logic for mock data (assuming "today" is roughly Aug 14 2026 based on screenshots)
-  const upcomingMeetings = mockMeetings.filter(m => new Date(m.date) >= new Date("2026-08-14"));
-  const pastMeetings = mockMeetings.filter(m => new Date(m.date) < new Date("2026-08-14"));
+export default async function MyHomePage() {
+  let meetings: any[] = [];
+  let myActions: any[] = [];
+  let orgName = "No Organisation";
+  
+  try {
+    const meRes = await fetchWithAuth("/auth/me");
+    if (meRes.ok) {
+      const user = await meRes.json();
+      if (user.memberships && user.memberships.length > 0) {
+        const org = user.memberships[0].organisation;
+        orgName = org.name;
+        const res = await fetchWithAuth(`/meetings?organisationId=${org.id}`);
+        if (res.ok) {
+          meetings = await res.json();
+        }
+      }
+    }
+    
+    const actionsRes = await fetchWithAuth("/actions/me");
+    if (actionsRes.ok) {
+      myActions = await actionsRes.json();
+    }
+  } catch (err: any) {
+    if (err?.digest && err.digest.startsWith('NEXT_REDIRECT')) throw err;
+    console.error("Failed to fetch dashboard data", err);
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingMeetings = meetings.filter(m => new Date(m.date) >= today);
+  const pastMeetings = meetings.filter(m => new Date(m.date) < today);
+  const currentActions = myActions.filter(a => a.status === "OPEN" || !a.status);
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-12">
@@ -73,7 +103,7 @@ export default function MyHomePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-4 h-4 bg-gray-200 rounded-sm"></div>
-                      <span className="text-sm text-muted-foreground">Kartikey Tech</span>
+                      <span className="text-sm text-muted-foreground">{orgName}</span>
                     </div>
                     <h3 className="font-semibold text-lg text-slate-800 truncate group-hover:text-primary transition-colors">{meeting.title}</h3>
                     <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
@@ -115,7 +145,7 @@ export default function MyHomePage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-4 h-4 bg-gray-200 rounded-sm"></div>
-                        <span className="text-sm text-muted-foreground">Kartikey Tech</span>
+                        <span className="text-sm text-muted-foreground">{orgName}</span>
                       </div>
                       <h3 className="font-semibold text-lg text-slate-800 truncate group-hover:text-primary transition-colors">{meeting.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
@@ -170,11 +200,34 @@ export default function MyHomePage() {
         </TabsContent>
 
         <TabsContent value="actions" className="mt-0">
-          <div className="border rounded-xl bg-white p-16 flex flex-col items-center justify-center text-center shadow-sm">
-            <div className="bg-gray-50 p-4 rounded-2xl mb-4">
-              <CheckSquare className="w-8 h-8 text-slate-400" />
-            </div>
-            <p className="text-slate-600 text-sm">No actions have been created yet.</p>
+          <div className="space-y-4">
+            {currentActions.length === 0 ? (
+              <div className="border rounded-xl bg-white p-16 flex flex-col items-center justify-center text-center shadow-sm">
+                <div className="bg-gray-50 p-4 rounded-2xl mb-4">
+                  <CheckSquare className="w-8 h-8 text-slate-400" />
+                </div>
+                <p className="text-slate-600 text-sm">No actions have been created yet.</p>
+              </div>
+            ) : (
+              currentActions.map(action => (
+                <div key={action.id} className="flex items-center justify-between border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow group">
+                  <div className="flex-1 min-w-0 pr-4">
+                    <h3 className="font-medium text-slate-800 text-base mb-1">{action.description}</h3>
+                    <div className="flex items-center text-sm text-slate-500 gap-4">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Due: {action.dueDate ? new Date(action.dueDate).toLocaleDateString() : "No date"}</span>
+                      <span className="text-gray-300">•</span>
+                      <span>{action.minutes?.meeting?.title || "Meeting"}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                     <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">Open</span>
+                     <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
+                       <MoreHorizontal className="w-5 h-5" />
+                     </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </TabsContent>
       </Tabs>

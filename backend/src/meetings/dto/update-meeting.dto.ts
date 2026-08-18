@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEnum,
   Matches,
+  IsArray,
 } from 'class-validator';
 import { MeetingStatus, AgendaStatus } from '@prisma/client';
 
@@ -32,6 +33,14 @@ export class UpdateMeetingDto {
   location?: string;
 
   @IsOptional()
+  @IsString()
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  locationId?: string;
+
+  @IsOptional()
   @IsBoolean()
   isRemote?: boolean;
 
@@ -50,4 +59,14 @@ export class UpdateMeetingDto {
   @IsOptional()
   @IsEnum(AgendaStatus)
   agendaStatus?: AgendaStatus;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  attendees?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  apologies?: string[];
 }
