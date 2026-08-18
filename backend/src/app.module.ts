@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { DecisionsModule } from './decisions/decisions.module';
 import { BoardPackModule } from './board-pack/board-pack.module';
 import { ActionsModule } from './actions/actions.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ActionsModule } from './actions/actions.module';
     DecisionsModule,
     BoardPackModule,
     ActionsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
