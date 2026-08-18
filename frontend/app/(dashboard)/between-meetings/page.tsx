@@ -15,7 +15,7 @@ export default function BetweenMeetingsPage() {
   const orgId = user?.memberships?.[0]?.organisation?.id;
 
   const { data: decisions, error, isLoading } = useSWR(
-    orgId ? `/organisations/${orgId}/decisions/flying` : null,
+    orgId ? `/organisations/${orgId}/decisions` : null,
     fetcher
   );
 
