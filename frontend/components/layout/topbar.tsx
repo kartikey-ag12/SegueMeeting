@@ -38,7 +38,7 @@ export async function Topbar() {
         
         <ProfileDropdown user={user} />
 
-        <Button className="bg-[#6b21a8] hover:bg-[#581c87] text-white rounded-md px-4 h-9 flex items-center gap-2">
+        <Button className="bg-slate-800 hover:bg-slate-700 text-white rounded-md px-4 h-9 flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
           Ask AI
         </Button>

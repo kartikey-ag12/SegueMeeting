@@ -195,8 +195,8 @@ export function Sidebar({ organisations = [], currentOrgId = "" }: { organisatio
 
       {/* Bottom Buy Now Button */}
       <div className="p-4 mt-auto">
-        <button className="w-full flex items-center justify-center gap-2 bg-[#e0f0ff] hover:bg-[#d0e8ff] text-blue-900 font-medium py-3 rounded-xl transition-colors text-[15px]">
-          <Gem className="w-5 h-5 text-blue-600" />
+        <button className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 rounded-xl transition-colors text-[15px]">
+          <Gem className="w-5 h-5 text-white" />
           Buy Now
         </button>
       </div>

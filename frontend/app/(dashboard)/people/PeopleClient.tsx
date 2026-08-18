@@ -98,7 +98,7 @@ export default function PeopleClient({ orgId, initialMembers }: { orgId: string,
         </div>
         <button 
           onClick={() => { setIsInviteOpen(true); setError(""); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-md text-sm font-medium hover:bg-slate-700 transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Invite Member
