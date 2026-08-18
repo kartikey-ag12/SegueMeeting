@@ -19,7 +19,7 @@ export default function NewFlyingMinutePage() {
   const router = useRouter();
 
   const { data: user } = useSWR("/auth/me", fetcher);
-  const orgId = user?.memberships?.[0]?.organisationId;
+  const orgId = user?.memberships?.[0]?.organisation?.id;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");

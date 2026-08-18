@@ -15,7 +15,7 @@ export default function FlyingMinuteDetailsPage() {
   const router = useRouter();
 
   const { data: user } = useSWR("/auth/me", fetcher);
-  const orgId = user?.memberships?.[0]?.organisationId;
+  const orgId = user?.memberships?.[0]?.organisation?.id;
 
   const [comment, setComment] = useState("");
   const [isVoting, setIsVoting] = useState(false);

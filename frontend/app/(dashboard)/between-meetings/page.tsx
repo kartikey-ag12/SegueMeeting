@@ -12,7 +12,7 @@ export default function BetweenMeetingsPage() {
   const router = useRouter();
 
   const { data: user } = useSWR("/auth/me", fetcher);
-  const orgId = user?.memberships?.[0]?.organisationId;
+  const orgId = user?.memberships?.[0]?.organisation?.id;
 
   const { data: decisions, error, isLoading } = useSWR(
     orgId ? `/organisations/${orgId}/decisions/flying` : null,
