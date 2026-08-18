@@ -253,7 +253,7 @@ model Decision {
   organisationId String
   meetingId      String?
   title          String?
-  content        String
+  content        String          @default("")
   type           DecisionType    @default(MEETING)
   outcome        DecisionOutcome @default(NOT_SET)
   status         String          @default("DRAFT")
