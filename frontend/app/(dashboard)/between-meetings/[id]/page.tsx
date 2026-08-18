@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { fetchWithAuth } from "@/lib/api";
+import { fetchWithAuth, fetcher } from "@/lib/api";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -14,7 +14,7 @@ export default function FlyingMinuteDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const { data: user } = useSWR("/auth/me", fetchWithAuth);
+  const { data: user } = useSWR("/auth/me", fetcher);
   const orgId = user?.memberships?.[0]?.organisationId;
 
   const [comment, setComment] = useState("");
@@ -22,7 +22,7 @@ export default function FlyingMinuteDetailsPage() {
 
   const { data: fm, error, isLoading, mutate } = useSWR(
     orgId && id ? `/organisations/${orgId}/decisions/${id}` : null,
-    fetchWithAuth
+    fetcher
   );
 
   if (isLoading) {

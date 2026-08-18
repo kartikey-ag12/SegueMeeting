@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { fetchWithAuth } from "@/lib/api";
+import { fetchWithAuth, fetcher } from "@/lib/api";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -18,7 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 export default function NewFlyingMinutePage() {
   const router = useRouter();
 
-  const { data: user } = useSWR("/auth/me", fetchWithAuth);
+  const { data: user } = useSWR("/auth/me", fetcher);
   const orgId = user?.memberships?.[0]?.organisationId;
 
   const [title, setTitle] = useState("");
@@ -30,7 +30,7 @@ export default function NewFlyingMinutePage() {
   // Fetch members to populate the recipient picker
   const { data: members } = useSWR(
     orgId ? `/organisations/${orgId}/members` : null,
-    fetchWithAuth
+    fetcher
   );
 
   const toggleVoter = (memberId: string) => {

@@ -5,18 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Search, Send, FileType2, CheckSquare2, ListFilter, Plus } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
-import { fetchWithAuth } from "@/lib/api";
+import { fetchWithAuth, fetcher } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 export default function BetweenMeetingsPage() {
   const router = useRouter();
 
-  const { data: user } = useSWR("/auth/me", fetchWithAuth);
+  const { data: user } = useSWR("/auth/me", fetcher);
   const orgId = user?.memberships?.[0]?.organisationId;
 
   const { data: decisions, error, isLoading } = useSWR(
-    orgId ? `/organisations/${orgId}/decisions` : null,
-    fetchWithAuth
+    orgId ? `/organisations/${orgId}/decisions/flying` : null,
+    fetcher
   );
 
   const flyingMinutes = decisions?.filter((d: any) => d.type === 'FLYING_MINUTE') || [];

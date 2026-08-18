@@ -23,3 +23,13 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   return res;
 }
+
+export const fetcher = async (url: string) => {
+  const res = await fetchWithAuth(url);
+  if (!res.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    error.message = await res.text();
+    throw error;
+  }
+  return res.json();
+};
