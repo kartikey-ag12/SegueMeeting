@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserPlus, Settings2, Trash2, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function PeopleClient({ orgId, initialMembers }: { orgId: string, initialMembers: any[] }) {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function PeopleClient({ orgId, initialMembers }: { orgId: string,
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/proxy?path=/organisations/${orgId}/members`, {
+      const res = await fetchWithAuth(`/organisations/${orgId}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, role }),
@@ -51,7 +52,7 @@ export default function PeopleClient({ orgId, initialMembers }: { orgId: string,
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/proxy?path=/organisations/${orgId}/members/${selectedMember.user.id}`, {
+      const res = await fetchWithAuth(`/organisations/${orgId}/members/${selectedMember.user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),
@@ -73,7 +74,7 @@ export default function PeopleClient({ orgId, initialMembers }: { orgId: string,
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/proxy?path=/organisations/${orgId}/members/${selectedMember.user.id}`, {
+      const res = await fetchWithAuth(`/organisations/${orgId}/members/${selectedMember.user.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
