@@ -103,11 +103,9 @@ export default function NewFlyingMinutePage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Voting Closes On</label>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+              <PopoverTrigger render={<Button variant="outline" className="w-[240px] justify-start text-left font-normal" />}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {closeDate ? format(closeDate, "PPP") : <span>Pick a date</span>}
-                </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
