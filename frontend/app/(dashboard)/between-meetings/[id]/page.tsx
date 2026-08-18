@@ -19,6 +19,7 @@ export default function FlyingMinuteDetailsPage() {
 
   const [comment, setComment] = useState("");
   const [isVoting, setIsVoting] = useState(false);
+  const [isChangingVote, setIsChangingVote] = useState(false);
 
   const { data: fm, error, isLoading, mutate } = useSWR(
     orgId && id ? `/organisations/${orgId}/decisions/${id}` : null,
@@ -54,6 +55,7 @@ export default function FlyingMinuteDetailsPage() {
       }
 
       toast.success("Vote submitted successfully");
+      setIsChangingVote(false);
       mutate();
     } catch (err) {
       console.error(err);
@@ -76,8 +78,8 @@ export default function FlyingMinuteDetailsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/between-meetings">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <ArrowLeft className="w-4 h-4" />
+            <Button variant="outline" size="sm" className="rounded-full gap-2 px-4">
+              <ArrowLeft className="w-4 h-4" /> Back to Flying Minutes
             </Button>
           </Link>
           <h1 className="text-xl font-semibold text-slate-800">Flying Minute Details</h1>
@@ -106,9 +108,16 @@ export default function FlyingMinuteDetailsPage() {
             </div>
           </div>
 
-          {userVoteRecord && !hasVoted && fm.status === 'OPEN' && (
+          {(userVoteRecord && (!hasVoted || isChangingVote) && fm.status === 'OPEN') && (
             <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
-              <h3 className="text-md font-semibold text-indigo-900 mb-4">Cast Your Vote</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-md font-semibold text-indigo-900">Cast Your Vote</h3>
+                {isChangingVote && (
+                  <Button variant="ghost" size="sm" onClick={() => setIsChangingVote(false)}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
               
               <div className="space-y-4">
                 <Textarea 
@@ -146,8 +155,8 @@ export default function FlyingMinuteDetailsPage() {
             </div>
           )}
 
-          {userVoteRecord && hasVoted && (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex items-center justify-between">
+          {userVoteRecord && hasVoted && !isChangingVote && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Your Vote</h3>
                 <p className="text-sm text-slate-500">You voted <strong>{userVoteRecord.vote?.replace('_', ' ')}</strong></p>
@@ -155,9 +164,16 @@ export default function FlyingMinuteDetailsPage() {
                   <p className="text-sm text-slate-600 mt-2 italic">"{userVoteRecord.comment}"</p>
                 )}
               </div>
-              {userVoteRecord.vote === 'IN_FAVOUR' && <CheckCircle2 className="w-8 h-8 text-emerald-500" />}
-              {userVoteRecord.vote === 'AGAINST' && <XCircle className="w-8 h-8 text-red-500" />}
-              {userVoteRecord.vote === 'ABSTAIN' && <MinusCircle className="w-8 h-8 text-slate-400" />}
+              <div className="flex items-center gap-4">
+                {fm.status === 'OPEN' && (
+                  <Button variant="outline" size="sm" onClick={() => setIsChangingVote(true)}>
+                    Change Vote
+                  </Button>
+                )}
+                {userVoteRecord.vote === 'IN_FAVOUR' && <CheckCircle2 className="w-8 h-8 text-emerald-500" />}
+                {userVoteRecord.vote === 'AGAINST' && <XCircle className="w-8 h-8 text-red-500" />}
+                {userVoteRecord.vote === 'ABSTAIN' && <MinusCircle className="w-8 h-8 text-slate-400" />}
+              </div>
             </div>
           )}
         </div>
