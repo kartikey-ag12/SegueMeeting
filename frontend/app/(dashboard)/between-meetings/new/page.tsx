@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/AuthContext";
 import { fetchWithAuth } from "@/lib/api";
 import useSWR from "swr";
 import { toast } from "sonner";
@@ -18,8 +17,9 @@ import { Calendar } from "@/components/ui/calendar";
 
 export default function NewFlyingMinutePage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const orgId = user?.currentOrganisationId;
+
+  const { data: user } = useSWR("/auth/me", fetchWithAuth);
+  const orgId = user?.memberships?.[0]?.organisationId;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");

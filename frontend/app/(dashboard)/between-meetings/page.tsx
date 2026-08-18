@@ -6,13 +6,13 @@ import { Search, Send, FileType2, CheckSquare2, ListFilter, Plus } from "lucide-
 import Link from "next/link";
 import useSWR from "swr";
 import { fetchWithAuth } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function BetweenMeetingsPage() {
-  const { user } = useAuth();
-  const orgId = user?.currentOrganisationId;
   const router = useRouter();
+
+  const { data: user } = useSWR("/auth/me", fetchWithAuth);
+  const orgId = user?.memberships?.[0]?.organisationId;
 
   const { data: decisions, error, isLoading } = useSWR(
     orgId ? `/organisations/${orgId}/decisions` : null,
